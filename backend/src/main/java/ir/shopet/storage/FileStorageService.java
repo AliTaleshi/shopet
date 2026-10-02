@@ -1,10 +1,8 @@
 package ir.shopet.storage;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -44,16 +42,21 @@ public class FileStorageService {
         if (extension == null || file.isEmpty()) {
             throw ApiException.badRequest("فقط تصاویر JPG، PNG، WEBP یا GIF مجاز هستند.");
         }
-        String name = UUID.randomUUID().toString().replace("-", "") + "." + extension;
-        try (InputStream in = file.getInputStream()) {
-            if (!looksLikeImage(in.readNBytes(12), extension)) {
-                throw ApiException.badRequest("محتوای فایل تصویر معتبر نیست.");
-            }
+        try {
+            return store(file.getBytes(), extension);
         } catch (IOException e) {
             throw ApiException.badRequest("خواندن فایل ممکن نشد.");
         }
-        try (InputStream in = file.getInputStream()) {
-            Files.copy(in, root.resolve(name), StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    /** Stores image bytes under a new random name; {@code extension} is one of jpg, png, webp, gif. */
+    public String store(byte[] data, String extension) {
+        if (!looksLikeImage(data, extension)) {
+            throw ApiException.badRequest("محتوای فایل تصویر معتبر نیست.");
+        }
+        String name = UUID.randomUUID().toString().replace("-", "") + "." + extension;
+        try {
+            Files.write(root.resolve(name), data);
         } catch (IOException e) {
             throw new IllegalStateException("Could not store file", e);
         }

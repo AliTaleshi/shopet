@@ -39,7 +39,7 @@ function Gallery({ product }: { product: ProductDetail }) {
   return (
     <Box>
       <Paper variant="outlined" sx={{ overflow: 'hidden' }}>
-        <ProductImage src={images[active]?.url} alt={product.name} petType={product.petType} height={380} />
+        <ProductImage src={images[active]?.url} alt={product.name} petType={product.petType} height={380} fit="contain" />
       </Paper>
       {images.length > 1 && (
         <Box sx={{ display: 'flex', gap: 1, mt: 1, flexWrap: 'wrap' }}>

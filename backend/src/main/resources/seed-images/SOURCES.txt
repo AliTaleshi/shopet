@@ -1,0 +1,32 @@
+Product photos for the demo catalogue, from Unsplash (https://unsplash.com/license): free to use, no attribution required.
+
+dog-adult-dry-food.jpg  https://images.unsplash.com/photo-1589924691995-400dc9ecc119
+puppy-dry-food.jpg  https://images.unsplash.com/photo-1611003228941-98852ba62227
+cat-indoor-dry-food.jpg  https://images.unsplash.com/photo-1518791841217-8f162f1e1131
+cat-sterilised-dry-food.jpg  https://images.unsplash.com/photo-1495360010541-f48722b34f7d
+cat-pouch.jpg  https://images.unsplash.com/photo-1574158622682-e40e69881006
+dog-can.jpg  https://images.unsplash.com/photo-1597843786411-a7fa8ad44a95
+cat-ice-cream-treat.jpg  https://images.unsplash.com/photo-1543852786-1cf6624b9987
+dog-dental-chew.jpg  https://images.unsplash.com/photo-1568640347023-a616a30bc3bd
+bird-treat-stick.jpg  https://images.unsplash.com/photo-1552728089-57bdde30beb3
+dog-rubber-ball.jpg  https://images.unsplash.com/photo-1552053831-71594a27632d
+cat-feather-wand.jpg  https://images.unsplash.com/photo-1545249390-6bdfa286032f
+cat-tunnel.jpg  https://images.unsplash.com/photo-1555685812-4b943f1cb0eb
+bird-mirror-bell.jpg  https://images.unsplash.com/photo-1522858547137-f1dcec554f55
+dog-collar-leash.jpg  https://images.unsplash.com/photo-1477884213360-7e9d7dcc1e48
+pet-carrier.jpg  https://images.unsplash.com/photo-1520087619250-584c0cbd35e8
+dog-shampoo.jpg  https://images.unsplash.com/photo-1516734212186-a967f81ad0d7
+cat-litter.jpg  https://images.unsplash.com/photo-1597626133663-53df9633b799
+nail-clipper.jpg  https://images.unsplash.com/photo-1611173622933-91942d394b04
+steel-bowls.jpg  https://images.unsplash.com/photo-1608408891486-f5cade977d19
+cat-water-fountain.jpg  https://images.unsplash.com/photo-1592194996308-7b43878e84a6
+pet-bed.jpg  https://images.unsplash.com/photo-1600369671236-e74521d4b6ad
+budgie-cage.jpg  https://images.unsplash.com/photo-1555169062-013468b47731
+budgie-seed-mix.jpg  https://images.unsplash.com/photo-1549608276-5786777e6587
+fish-flakes.jpg  https://images.unsplash.com/photo-1522069169874-c58ec4b76be5
+aquarium-40l.jpg  https://images.unsplash.com/photo-1546026423-cc4642628d2b
+aquarium-filter.jpg  https://images.unsplash.com/photo-1535591273668-578e31182c4f
+hamster-food.jpg  https://images.unsplash.com/photo-1548767797-d8c844163c4c
+hamster-wheel.jpg  https://images.unsplash.com/photo-1584553421349-3557471bed79
+turtle-terrarium.jpg  https://images.unsplash.com/photo-1504450874802-0ba2bcd9b5ae
+turtle-food.jpg  https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f

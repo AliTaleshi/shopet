@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { PNG_1X1, adminToken, apiLogin, findProduct, placePaidOrder, randomPhone, useToken } from '../helpers'
 
-test('admin creates a product with an image and it appears in the shop', async ({ page }) => {
+test('admin creates a product with an image and it appears in the shop', async ({ page, request }) => {
   await useToken(page, adminToken())
   const name = `توپ تنیس سگ ${Date.now()}`
 
@@ -16,6 +16,7 @@ test('admin creates a product with an image and it appears in the shop', async (
   await page.getByRole('button', { name: 'ذخیره' }).click()
 
   await expect(page).toHaveURL(/\/admin\/products\/\d+$/)
+  const productUrl = page.url()
   await expect(page.getByRole('heading', { name: 'ویرایش محصول' })).toBeVisible()
   await page.getByTestId('image-input').setInputFiles({ name: 'ball.png', mimeType: 'image/png', buffer: PNG_1X1 })
   await expect(page.getByRole('button', { name: 'حذف تصویر' })).toHaveCount(1)
@@ -32,6 +33,11 @@ test('admin creates a product with an image and it appears in the shop', async (
   await expect(card.locator('img')).toHaveAttribute('src', /\/api\/files\/[a-f0-9]{32}\.png/)
   await expect(card.getByTestId('final-price')).toContainText('۳۰۰٬۰۰۰')
   await expect(card.getByText('۱۴٪')).toBeVisible()
+
+  // Remove the test product so it doesn't clutter the demo shop.
+  const id = Number(new URL(productUrl).pathname.split('/').pop())
+  const res = await request.delete(`/api/admin/products/${id}`, { headers: { Authorization: `Bearer ${adminToken()}` } })
+  expect(res.status()).toBe(204)
 })
 
 test('admin moves a paid order through the workflow and the customer can then review', async ({ page, request }) => {
@@ -83,7 +89,11 @@ test('admin manages coupons and categories', async ({ page }) => {
   await dialog.getByLabel('درصد تخفیف').fill('15')
   await dialog.getByRole('button', { name: 'ذخیره' }).click()
   await expect(dialog).toBeHidden()
-  await expect(page.getByRole('row').filter({ hasText: code })).toContainText('۱۵٪')
+  const couponRow = page.getByRole('row').filter({ hasText: code })
+  await expect(couponRow).toContainText('۱۵٪')
+  page.once('dialog', (d) => d.accept())
+  await couponRow.getByRole('button', { name: 'حذف' }).click()
+  await expect(couponRow).toHaveCount(0)
 
   const slug = `e2e-${Date.now()}`
   await page.goto('/admin/categories')

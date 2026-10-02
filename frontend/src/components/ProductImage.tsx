@@ -16,10 +16,12 @@ interface Props {
   alt: string
   petType: PetType
   height?: number | string
+  /** `cover` fills the box (cards, thumbnails); `contain` shows the whole photo (product gallery). */
+  fit?: 'cover' | 'contain'
 }
 
 /** Product photo, or a colourful pet-themed placeholder when the product has no image. */
-export default function ProductImage({ src, alt, petType, height = 200 }: Props) {
+export default function ProductImage({ src, alt, petType, height = 200, fit = 'cover' }: Props) {
   if (src) {
     return (
       <Box
@@ -27,7 +29,7 @@ export default function ProductImage({ src, alt, petType, height = 200 }: Props)
         src={src}
         alt={alt}
         loading="lazy"
-        sx={{ width: '100%', height, objectFit: 'contain', bgcolor: '#fff', display: 'block' }}
+        sx={{ width: '100%', height, objectFit: fit, bgcolor: '#fff', display: 'block' }}
       />
     )
   }
