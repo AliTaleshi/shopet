@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: shopet
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/shopet}
+    username: ${DB_USER:shopet}
+    password: ${DB_PASSWORD:shopet_secret}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_batch_fetch_size: 50
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 25MB
+
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+app:
+  public-url: ${APP_PUBLIC_URL:}
+  admin-phone: ${ADMIN_PHONE:09120000000}
+  seed-demo-data: ${SEED_DEMO_DATA:true}
+  upload-dir: ${UPLOAD_DIR:./uploads}
+  jwt:
+    secret: ${JWT_SECRET:dev-only-secret-change-me-please-0123456789abcdef}
+    ttl: 7d
+  otp:
+    expose-code: ${OTP_EXPOSE_CODE:true}
+    ttl: 2m
+    resend-interval: 60s
+    max-attempts: 5
+  shipping:
+    cost: 50000
+    free-threshold: 1000000
+  order:
+    unpaid-timeout: 30m
+    expiry-check-interval: 60s
+  payment:
+    gateway: mock

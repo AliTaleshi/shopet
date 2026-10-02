@@ -1,0 +1,49 @@
+name: shopet
+
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-shopet}
+      POSTGRES_USER: ${POSTGRES_USER:-shopet}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-shopet_secret}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-shopet}
+      DB_USER: ${POSTGRES_USER:-shopet}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-shopet_secret}
+      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-secret-of-at-least-32-chars}
+      ADMIN_PHONE: ${ADMIN_PHONE:-09120000000}
+      OTP_EXPOSE_CODE: ${OTP_EXPOSE_CODE:-true}
+      SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
+    volumes:
+      - uploads:/app/uploads
+    ports:
+      - "${API_PORT:-8089}:8080"
+
+  frontend:
+    build: ./frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${WEB_PORT:-8088}:80"
+
+volumes:
+  pgdata:
+  uploads:
