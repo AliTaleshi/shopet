@@ -24,7 +24,7 @@ export default function DashboardPage() {
       <Typography variant="h5" component="h1" sx={{ mb: 2 }}>داشبورد</Typography>
       <Grid container spacing={2}>
         <Grid size={{ xs: 6, md: 4 }}><Stat label="فروش (سفارش‌های پرداخت‌شده)" value={formatToman(s.revenue)} color="primary.main" /></Grid>
-        <Grid size={{ xs: 6, md: 4 }}><Stat label="سفارش‌های آماده پردازش" value={formatNumber(s.toProcessCount)} color="warning.main" /></Grid>
+        <Grid size={{ xs: 6, md: 4 }}><Stat label="سفارش‌های آماده پردازش" value={formatNumber(s.toProcessCount)} color="secondary.main" /></Grid>
         <Grid size={{ xs: 6, md: 4 }}><Stat label="در انتظار پرداخت" value={formatNumber(s.pendingPaymentCount)} /></Grid>
         <Grid size={{ xs: 6, md: 4 }}><Stat label="کل سفارش‌ها" value={formatNumber(s.orderCount)} /></Grid>
         <Grid size={{ xs: 6, md: 4 }}><Stat label="محصولات" value={formatNumber(s.productCount)} /></Grid>
@@ -58,7 +58,7 @@ export default function DashboardPage() {
             {s.lowStock.map((p) => (
               <Box key={p.id} sx={{ display: 'flex', justifyContent: 'space-between', py: 0.75, gap: 1 }}>
                 <Link component={RouterLink} to={`/admin/products/${p.id}`} variant="body2" underline="hover">{p.name}</Link>
-                <Typography variant="body2" color={p.stock === 0 ? 'error' : 'warning.main'} sx={{ whiteSpace: 'nowrap' }}>
+                <Typography variant="body2" color={p.stock === 0 ? 'error' : 'warning.dark'} sx={{ whiteSpace: 'nowrap' }}>
                   {formatNumber(p.stock)} عدد
                 </Typography>
               </Box>

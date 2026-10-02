@@ -41,7 +41,7 @@ export default function HomePage() {
           p: { xs: 3, md: 6 },
           borderRadius: 4,
           color: '#fff',
-          background: 'linear-gradient(120deg, #0f766e 0%, #14b8a6 60%, #f59e0b 140%)',
+          background: 'linear-gradient(120deg, #c2410c 0%, #ea580c 50%, #fb923c 100%)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',

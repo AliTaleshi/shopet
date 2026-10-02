@@ -9,10 +9,12 @@ export const rtlCache = createCache({ key: 'muirtl', stylisPlugins: [prefixer, r
 export const theme = createTheme({
   direction: 'rtl',
   palette: {
-    primary: { main: '#0f766e', light: '#14b8a6', dark: '#115e59', contrastText: '#fff' },
-    secondary: { main: '#f59e0b', contrastText: '#1f2937' },
-    background: { default: '#f6f7f9', paper: '#ffffff' },
-    text: { primary: '#1f2937', secondary: '#6b7280' },
+    primary: { main: '#ea580c', light: '#fb923c', dark: '#c2410c', contrastText: '#fff' },
+    secondary: { main: '#1e3a8a', light: '#3b5bb5', dark: '#172e6e', contrastText: '#fff' },
+    // Yellow rather than MUI's orange so "warning" stays distinct from the orange brand colour.
+    warning: { main: '#eab308', dark: '#a16207', contrastText: '#1e293b' },
+    background: { default: '#fff8f1', paper: '#ffffff' },
+    text: { primary: '#1e293b', secondary: '#64748b' },
   },
   shape: { borderRadius: 12 },
   typography: {
@@ -27,8 +29,8 @@ export const theme = createTheme({
   },
   components: {
     MuiButton: { defaultProps: { disableElevation: true } },
-    MuiCard: { defaultProps: { elevation: 0 }, styleOverrides: { root: { border: '1px solid #e5e7eb' } } },
-    MuiPaper: { styleOverrides: { outlined: { borderColor: '#e5e7eb' } } },
+    MuiCard: { defaultProps: { elevation: 0 }, styleOverrides: { root: { border: '1px solid #f0e4d7' } } },
+    MuiPaper: { styleOverrides: { outlined: { borderColor: '#f0e4d7' } } },
     MuiTextField: { defaultProps: { fullWidth: true } },
   },
 })

@@ -57,8 +57,8 @@ type ChipColor = 'default' | 'primary' | 'secondary' | 'error' | 'info' | 'succe
 export const ORDER_STATUS: Record<OrderStatus, { label: string; color: ChipColor }> = {
   PENDING_PAYMENT: { label: 'در انتظار پرداخت', color: 'warning' },
   PAID: { label: 'پرداخت‌شده', color: 'info' },
-  PROCESSING: { label: 'در حال آماده‌سازی', color: 'primary' },
-  SHIPPED: { label: 'ارسال‌شده', color: 'secondary' },
+  PROCESSING: { label: 'در حال آماده‌سازی', color: 'secondary' },
+  SHIPPED: { label: 'ارسال‌شده', color: 'primary' },
   DELIVERED: { label: 'تحویل‌شده', color: 'success' },
   CANCELLED: { label: 'لغو‌شده', color: 'error' },
 }

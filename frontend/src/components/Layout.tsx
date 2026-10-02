@@ -37,7 +37,7 @@ import { PET_TYPES, formatNumber, toPersianDigits } from '../lib/format'
 function Logo() {
   return (
     <Box component={RouterLink} to="/" sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'inherit', textDecoration: 'none' }}>
-      <PetsIcon sx={{ color: 'secondary.main' }} />
+      <PetsIcon sx={{ color: 'secondary.main', bgcolor: '#fff', borderRadius: '50%', p: 0.5, fontSize: 30 }} />
       <Typography variant="h6" sx={{ fontWeight: 900, letterSpacing: 0 }}>
         شاپت
       </Typography>
@@ -186,7 +186,7 @@ function Header() {
               {p.emoji} {p.label}
             </Button>
           ))}
-          <Button color="inherit" component={RouterLink} to="/products?discounted=true" size="small" sx={{ mr: 'auto', color: 'secondary.main' }}>
+          <Button component={RouterLink} to="/products?discounted=true" size="small" variant="contained" color="secondary" sx={{ mr: 'auto' }}>
             🔥 تخفیف‌ها
           </Button>
         </Container>
@@ -219,7 +219,7 @@ function Header() {
 
 function Footer() {
   return (
-    <Box component="footer" sx={{ bgcolor: '#111827', color: '#d1d5db', mt: 8, py: 5 }}>
+    <Box component="footer" sx={{ bgcolor: '#1e293b', color: '#cbd5e1', mt: 8, py: 5 }}>
       <Container maxWidth="lg" sx={{ display: 'flex', flexWrap: 'wrap', gap: 4, justifyContent: 'space-between' }}>
         <Box sx={{ maxWidth: 360 }}>
           <Typography variant="h6" sx={{ color: '#fff', mb: 1 }}>

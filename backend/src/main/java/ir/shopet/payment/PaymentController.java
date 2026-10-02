@@ -49,15 +49,15 @@ public class PaymentController {
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <title>درگاه پرداخت آزمایشی</title>
                 <style>
-                  body{font-family:Vazirmatn,Tahoma,sans-serif;background:#eef2f7;margin:0;display:flex;
-                       min-height:100vh;align-items:center;justify-content:center;color:#1f2937}
+                  body{font-family:Vazirmatn,Tahoma,sans-serif;background:#fff8f1;margin:0;display:flex;
+                       min-height:100vh;align-items:center;justify-content:center;color:#1e293b}
                   .card{background:#fff;border-radius:16px;box-shadow:0 8px 30px rgba(0,0,0,.08);padding:32px;
                         width:min(420px,calc(100%% - 32px));text-align:center}
                   h1{font-size:20px;margin:0 0 8px}
-                  .muted{color:#6b7280;font-size:14px}
-                  .amount{font-size:28px;font-weight:700;margin:24px 0;color:#0f766e}
+                  .muted{color:#64748b;font-size:14px}
+                  .amount{font-size:28px;font-weight:700;margin:24px 0;color:#c2410c}
                   a{display:block;padding:14px;border-radius:10px;text-decoration:none;font-weight:700;margin-top:12px}
-                  .ok{background:#0f766e;color:#fff}
+                  .ok{background:#1e3a8a;color:#fff}
                   .nok{background:#fee2e2;color:#b91c1c}
                 </style>
                 </head>
