@@ -38,8 +38,8 @@ docker compose up -d --build
 **Admin login:** mobile `09120000000` (configurable with `ADMIN_PHONE`). In demo mode (`OTP_EXPOSE_CODE=true`)
 the verification code is shown on the login page; it is also written to the backend log.
 
-**Demo photos:** the 30 demo products ship with photos from Unsplash (free license, sources in
-`backend/src/main/resources/seed-images/SOURCES.txt`); they are copied into the uploads volume on first start.
+**Demo photos:** the home page banner and the 30 demo products use photos from Unsplash (free license, sources in
+`frontend/src/assets/SOURCES.txt` and `backend/src/main/resources/seed-images/SOURCES.txt`); product photos are copied into the uploads volume on first start.
 
 **Demo coupons:** `WELCOME10` (10%, max 200,000 Toman) and `PET50` (50,000 Toman off orders over 500,000).
 

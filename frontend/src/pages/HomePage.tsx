@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 import type { ReactNode } from 'react'
 import { Link as RouterLink } from 'react-router-dom'
 import { catalogApi } from '../api/endpoints'
+import hero1200 from '../assets/hero-1200.jpg'
+import hero600 from '../assets/hero-600.jpg'
 import ProductGrid from '../components/ProductGrid'
 import { PET_TYPES } from '../lib/format'
 
@@ -38,31 +40,45 @@ export default function HomePage() {
     <>
       <Paper
         sx={{
-          p: { xs: 3, md: 6 },
           borderRadius: 4,
-          color: '#fff',
-          background: 'linear-gradient(120deg, #c2410c 0%, #ea580c 50%, #fb923c 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 2,
           overflow: 'hidden',
+          color: '#fff',
+          background: 'linear-gradient(120deg, #c2410c 0%, #ea580c 55%, #fb923c 100%)',
+          display: 'flex',
+          flexDirection: { xs: 'column', md: 'row' },
+          height: { md: 380 },
         }}
       >
-        <Box>
-          <Typography variant="h3" component="h1" sx={{ fontSize: { xs: 28, md: 44 }, mb: 1.5 }}>
+        <Box sx={{ flex: 1, p: { xs: 3, md: 6 }, display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <Typography variant="h3" component="h1" sx={{ fontSize: { xs: 28, md: 40 }, mb: 1.5 }}>
             هر چیزی که دوست کوچولوی شما لازم دارد
           </Typography>
-          <Typography sx={{ opacity: 0.9, mb: 3, maxWidth: 520 }}>
+          <Typography sx={{ opacity: 0.95, mb: 3, maxWidth: 480 }}>
             غذا، تشویقی، اسباب‌بازی و لوازم بهداشتی اصل برای سگ، گربه، پرنده، ماهی و دیگر حیوانات خانگی. ارسال رایگان برای خریدهای بالای یک میلیون تومان.
           </Typography>
-          <Button variant="contained" color="secondary" size="large" component={RouterLink} to="/products">
+          <Button variant="contained" color="secondary" size="large" component={RouterLink} to="/products" sx={{ alignSelf: 'flex-start' }}>
             شروع خرید
           </Button>
         </Box>
-        <Box sx={{ fontSize: { xs: 0, md: 120 }, lineHeight: 1, display: { xs: 'none', md: 'block' } }} aria-hidden>
-          🐶🐱
-        </Box>
+        {/* Photo sits on the left (RTL) and fades into the orange so it never sits behind the text. */}
+        <Box
+          component="img"
+          src={hero1200}
+          srcSet={`${hero600} 600w, ${hero1200} 1200w`}
+          sizes="(min-width: 900px) 560px, 100vw"
+          alt="سگ و گربه در کنار هم"
+          sx={{
+            order: { xs: -1, md: 0 },
+            width: { xs: '100%', md: '48%' },
+            height: { xs: 220, md: '100%' },
+            objectFit: 'cover',
+            objectPosition: '45% 55%',
+            maskImage: {
+              xs: 'linear-gradient(180deg, #000 65%, transparent)',
+              md: 'linear-gradient(90deg, #000 60%, transparent)',
+            },
+          }}
+        />
       </Paper>
 
       <Box component="section" sx={{ mt: 4 }}>
