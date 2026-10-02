@@ -29,7 +29,7 @@ interface CartState {
 const CartContext = createContext<CartState | null>(null)
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const notify = useNotify()
   const queryClient = useQueryClient()
   const [guestItems, setGuestItems] = useState<GuestCartItem[]>(readGuestCart)
@@ -91,9 +91,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       quantityOf,
       setQuantity,
       mergeGuestCart,
-      busy: mutation.isPending,
+      // Until the stored session is validated we don't know which cart to write to.
+      busy: mutation.isPending || authLoading,
     }),
-    [user, cartQuery.data, guestItems, quantityOf, setQuantity, mergeGuestCart, mutation.isPending],
+    [user, cartQuery.data, guestItems, quantityOf, setQuantity, mergeGuestCart, mutation.isPending, authLoading],
   )
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }

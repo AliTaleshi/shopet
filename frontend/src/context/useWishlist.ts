@@ -6,7 +6,7 @@ import { useAuth } from './AuthContext'
 import { useNotify } from './NotifyContext'
 
 export function useWishlist() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
   const notify = useNotify()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -28,6 +28,7 @@ export function useWishlist() {
   return {
     has: (productId: number) => !!ids.data?.includes(productId),
     toggle: (productId: number) => {
+      if (loading) return // Stored session is still being checked.
       if (!user) {
         navigate('/login', { state: { from: window.location.pathname } })
         return
