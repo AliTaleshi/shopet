@@ -127,7 +127,7 @@ export default function OrderDetailPage() {
           sx={{ mb: 2 }}
           action={
             <Box sx={{ display: 'flex', gap: 1 }}>
-              <Button color="inherit" size="small" onClick={() => cancel.mutate()} disabled={cancel.isPending}>لغو سفارش</Button>
+              <Button color="inherit" size="small" onClick={() => window.confirm('این سفارش لغو شود؟') && cancel.mutate()} disabled={cancel.isPending}>لغو سفارش</Button>
               <Button variant="contained" size="small" onClick={() => pay.mutate()} disabled={pay.isPending}>پرداخت</Button>
             </Box>
           }

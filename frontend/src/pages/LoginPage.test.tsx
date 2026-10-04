@@ -25,7 +25,9 @@ vi.mock('../api/endpoints', async (importOriginal) => {
 const user = { id: 5, phone: '09121234567', fullName: null, role: 'CUSTOMER', createdAt: '2026-10-01T00:00:00Z' }
 
 describe('LoginPage', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+  })
 
   it('rejects an invalid mobile number without calling the API', async () => {
     const u = userEvent.setup()

@@ -1,5 +1,5 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Grid, TextField } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type FormEvent } from 'react'
 import { errorMessage, fieldErrors } from '../api/client'
 import { accountApi } from '../api/endpoints'
 import type { Address } from '../api/types'
@@ -66,7 +66,21 @@ export default function AddressDialog({ open, address, onClose, onSaved }: Props
   }
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+    <Dialog
+      open={open}
+      onClose={onClose}
+      fullWidth
+      maxWidth="sm"
+      slotProps={{
+        paper: {
+          component: 'form',
+          onSubmit: (e: FormEvent) => {
+            e.preventDefault()
+            if (!saving) save()
+          },
+        },
+      }}
+    >
       <DialogTitle>{address?.id ? 'ویرایش آدرس' : 'افزودن آدرس جدید'}</DialogTitle>
       <DialogContent>
         <Grid container spacing={2} sx={{ pt: 1 }}>
@@ -89,7 +103,7 @@ export default function AddressDialog({ open, address, onClose, onSaved }: Props
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={onClose}>انصراف</Button>
-        <Button variant="contained" onClick={save} disabled={saving}>
+        <Button type="submit" variant="contained" disabled={saving}>
           ذخیره آدرس
         </Button>
       </DialogActions>

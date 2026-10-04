@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { useQueryClient } from '@tanstack/react-query'
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { setUnauthorizedListener, TOKEN_KEY } from '../api/client'
@@ -16,6 +17,15 @@ interface AuthState {
 
 const AuthContext = createContext<AuthState | null>(null)
 
+const PRIVATE_QUERY_ROOTS = new Set(['me', 'cart', 'wishlist', 'orders', 'addresses', 'admin'])
+
+/** Queries holding data of the logged-in user (review eligibility lives under the public ['reviews', id] key). */
+function isPrivateQuery(key: readonly unknown[]) {
+  return PRIVATE_QUERY_ROOTS.has(String(key[0])) || (key[0] === 'reviews' && key[2] === 'eligibility')
+}
+
+const isUnauthorized = (e: unknown) => axios.isAxiosError(e) && e.response?.status === 401
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient()
   const [user, setUser] = useState<User | null>(null)
@@ -24,11 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY)
     setUser(null)
-    queryClient.removeQueries({ queryKey: ['me'] })
-    queryClient.removeQueries({ queryKey: ['cart'] })
-    queryClient.removeQueries({ queryKey: ['wishlist'] })
-    queryClient.removeQueries({ queryKey: ['orders'] })
-    queryClient.removeQueries({ queryKey: ['addresses'] })
+    // Drop everything tied to the account so the next user never sees it; the public catalog stays cached.
+    queryClient.removeQueries({ predicate: (q) => isPrivateQuery(q.queryKey) })
   }, [queryClient])
 
   const login = useCallback((token: string, u: User) => {
@@ -46,8 +53,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     accountApi
       .me()
       .then(setUser)
-      .catch(() => logout())
+      // Only a rejected token ends the session; a network error or a restarting server must not log the user out.
+      .catch((e) => isUnauthorized(e) && logout())
       .finally(() => setLoading(false))
+  }, [logout])
+
+  // Keep tabs in sync: logging in or out in one tab applies to the others.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== TOKEN_KEY) return
+      if (!e.newValue) {
+        logout()
+      } else {
+        accountApi.me().then(setUser).catch(() => {})
+      }
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
   }, [logout])
 
   const value = useMemo<AuthState>(

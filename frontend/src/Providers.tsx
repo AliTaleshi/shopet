@@ -1,4 +1,5 @@
 import { CacheProvider } from '@emotion/react'
+import axios from 'axios'
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useState, type ReactNode } from 'react'
@@ -9,7 +10,15 @@ import { rtlCache, theme } from './theme'
 
 export function createQueryClient() {
   return new QueryClient({
-    defaultOptions: { queries: { staleTime: 30_000, refetchOnWindowFocus: false, retry: 1 } },
+    defaultOptions: {
+      queries: {
+        staleTime: 30_000,
+        refetchOnWindowFocus: false,
+        // Client errors (404, 400, ...) won't change on retry; only retry network and server errors, once.
+        retry: (failureCount, error) =>
+          failureCount < 1 && !(axios.isAxiosError(error) && (error.response?.status ?? 500) < 500),
+      },
+    },
   })
 }
 

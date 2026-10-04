@@ -16,28 +16,10 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { catalogApi } from '../api/endpoints'
-import type { PetType, ProductQuery } from '../api/types'
 import EmptyState from '../components/EmptyState'
 import ProductGrid from '../components/ProductGrid'
 import { PET_TYPES, SORT_OPTIONS, formatNumber, petTypeLabel, toLatinDigits } from '../lib/format'
-
-const PAGE_SIZE = 12
-
-function readQuery(params: URLSearchParams): ProductQuery {
-  const num = (k: string) => (params.get(k) ? Number(params.get(k)) : undefined)
-  return {
-    q: params.get('q') ?? undefined,
-    categoryId: num('categoryId'),
-    petType: (params.get('petType') as PetType) ?? undefined,
-    minPrice: num('minPrice'),
-    maxPrice: num('maxPrice'),
-    inStock: params.get('inStock') === 'true' || undefined,
-    discounted: params.get('discounted') === 'true' || undefined,
-    sort: (params.get('sort') as ProductQuery['sort']) ?? 'newest',
-    page: Math.max(0, (num('page') ?? 1) - 1),
-    size: PAGE_SIZE,
-  }
-}
+import { readQuery } from '../lib/productQuery'
 
 function Filters({ params, update }: { params: URLSearchParams; update: (changes: Record<string, string | null>) => void }) {
   const categories = useQuery({ queryKey: ['categories'], queryFn: catalogApi.categories })
@@ -80,13 +62,22 @@ function Filters({ params, update }: { params: URLSearchParams; update: (changes
           </MenuItem>
         ))}
       </TextField>
-      <Box sx={{ display: 'flex', gap: 1 }}>
-        <TextField size="small" label="از قیمت" value={minPrice} onChange={(e) => setMinPrice(toLatinDigits(e.target.value).replace(/\D/g, ''))} slotProps={{ htmlInput: { inputMode: 'numeric' } }} />
-        <TextField size="small" label="تا قیمت" value={maxPrice} onChange={(e) => setMaxPrice(toLatinDigits(e.target.value).replace(/\D/g, ''))} slotProps={{ htmlInput: { inputMode: 'numeric' } }} />
+      <Box
+        component="form"
+        onSubmit={(e) => {
+          e.preventDefault()
+          update({ minPrice: minPrice || null, maxPrice: maxPrice || null })
+        }}
+        sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}
+      >
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <TextField size="small" label="از قیمت" value={minPrice} onChange={(e) => setMinPrice(toLatinDigits(e.target.value).replace(/\D/g, ''))} slotProps={{ htmlInput: { inputMode: 'numeric' } }} />
+          <TextField size="small" label="تا قیمت" value={maxPrice} onChange={(e) => setMaxPrice(toLatinDigits(e.target.value).replace(/\D/g, ''))} slotProps={{ htmlInput: { inputMode: 'numeric' } }} />
+        </Box>
+        <Button type="submit" variant="outlined" size="small">
+          اعمال محدوده قیمت (تومان)
+        </Button>
       </Box>
-      <Button variant="outlined" size="small" onClick={() => update({ minPrice: minPrice || null, maxPrice: maxPrice || null })}>
-        اعمال محدوده قیمت (تومان)
-      </Button>
       <FormControlLabel
         control={<Checkbox checked={params.get('inStock') === 'true'} onChange={(e) => update({ inStock: e.target.checked ? 'true' : null })} />}
         label="فقط کالاهای موجود"
@@ -155,8 +146,20 @@ export default function ProductsPage() {
             ))}
           </TextField>
         </Box>
-        {products.data?.totalElements === 0 ? (
+        {products.isError ? (
+          <EmptyState
+            emoji="⚠️"
+            title="دریافت محصولات ممکن نشد."
+            action={<Button variant="contained" onClick={() => products.refetch()}>تلاش دوباره</Button>}
+          />
+        ) : products.data?.totalElements === 0 ? (
           <EmptyState emoji="🔍" title="محصولی با این مشخصات پیدا نشد." />
+        ) : products.data && products.data.content.length === 0 ? (
+          <EmptyState
+            emoji="📄"
+            title="این صفحه محصولی ندارد."
+            action={<Button variant="contained" onClick={() => update({ page: null })}>رفتن به صفحه اول</Button>}
+          />
         ) : (
           <ProductGrid products={products.data?.content} loading={products.isLoading} />
         )}

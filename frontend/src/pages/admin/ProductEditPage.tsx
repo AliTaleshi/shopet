@@ -18,6 +18,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { errorMessage, fieldErrors } from '../../api/client'
 import { adminApi, catalogApi } from '../../api/endpoints'
 import type { ProductDetail, ProductInput } from '../../api/types'
+import EmptyState from '../../components/EmptyState'
 import PageLoader from '../../components/PageLoader'
 import { useNotify } from '../../context/NotifyContext'
 import { PET_TYPES, toLatinDigits } from '../../lib/format'
@@ -48,8 +49,14 @@ export default function ProductEditPage() {
   const [form, setForm] = useState<ProductInput>(EMPTY)
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
+  const [loadError, setLoadError] = useState('')
 
   useEffect(() => {
+    // The page is reused when the route switches between products: never show the previous product's data.
+    setProduct(null)
+    setForm(EMPTY)
+    setErrors({})
+    setLoadError('')
     if (id === null) return
     adminApi.product(id).then((p) => {
       setProduct(p)
@@ -64,8 +71,8 @@ export default function ProductEditPage() {
         stock: p.stock,
         active: p.active,
       })
-    }).catch((e) => notify(errorMessage(e), 'error'))
-  }, [id, notify])
+    }).catch((e) => setLoadError(errorMessage(e)))
+  }, [id])
 
   useEffect(() => {
     if (isNew && !form.categoryId && categories.data?.length) setForm((f) => ({ ...f, categoryId: categories.data[0].id }))
@@ -121,7 +128,7 @@ export default function ProductEditPage() {
   }
 
   const removeImage = async (imageId: number) => {
-    if (id === null) return
+    if (id === null || !window.confirm('این تصویر حذف شود؟')) return
     try {
       setProduct(await adminApi.deleteImage(id, imageId))
     } catch (e) {
@@ -129,6 +136,9 @@ export default function ProductEditPage() {
     }
   }
 
+  if (loadError) {
+    return <EmptyState emoji="📦" title={loadError} action={<Button variant="contained" onClick={() => navigate('/admin/products')}>بازگشت به محصولات</Button>} />
+  }
   if (!isNew && !product) return <PageLoader />
 
   return (

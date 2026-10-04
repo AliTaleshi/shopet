@@ -14,10 +14,9 @@ import {
 } from '@mui/material'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState } from 'react'
-import { Link as RouterLink } from 'react-router-dom'
+import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import { errorMessage } from '../api/client'
 import { accountApi, orderApi } from '../api/endpoints'
-import type { CheckoutSummary } from '../api/types'
 import AddressDialog from '../components/AddressDialog'
 import EmptyState from '../components/EmptyState'
 import PageLoader from '../components/PageLoader'
@@ -26,6 +25,7 @@ import { formatNumber, formatToman, toPersianDigits } from '../lib/format'
 
 export default function CheckoutPage() {
   const notify = useNotify()
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const addresses = useQuery({ queryKey: ['addresses'], queryFn: accountApi.addresses })
   const [addressId, setAddressId] = useState<number | null>(null)
@@ -33,12 +33,10 @@ export default function CheckoutPage() {
   const [couponInput, setCouponInput] = useState('')
   const [coupon, setCoupon] = useState<string | undefined>()
   const [couponError, setCouponError] = useState('')
-  const [summary, setSummary] = useState<CheckoutSummary | null>(null)
   const [submitting, setSubmitting] = useState(false)
-
-  useEffect(() => {
-    orderApi.preview().then(setSummary).catch((e) => notify(errorMessage(e), 'error'))
-  }, [notify])
+  // Lives under ['cart'] so any cart change (or logout) refreshes/removes it too.
+  const preview = useQuery({ queryKey: ['cart', 'preview', coupon ?? null], queryFn: () => orderApi.preview(coupon) })
+  const summary = preview.data
 
   useEffect(() => {
     if (addressId === null && addresses.data?.length) setAddressId(addresses.data[0].id!)
@@ -48,7 +46,7 @@ export default function CheckoutPage() {
     setCouponError('')
     try {
       const res = await orderApi.preview(couponInput.trim())
-      setSummary(res)
+      queryClient.setQueryData(['cart', 'preview', res.couponCode], res)
       setCoupon(res.couponCode ?? undefined)
       notify('کد تخفیف اعمال شد')
     } catch (e) {
@@ -56,10 +54,9 @@ export default function CheckoutPage() {
     }
   }
 
-  const removeCoupon = async () => {
+  const removeCoupon = () => {
     setCoupon(undefined)
     setCouponInput('')
-    setSummary(await orderApi.preview())
   }
 
   const pay = async () => {
@@ -68,17 +65,35 @@ export default function CheckoutPage() {
       return
     }
     setSubmitting(true)
+    let orderId: number
     try {
-      const order = await orderApi.create(addressId, coupon)
-      queryClient.invalidateQueries({ queryKey: ['cart'] })
-      const { redirectUrl } = await orderApi.pay(order.id)
-      window.location.assign(redirectUrl)
+      orderId = (await orderApi.create(addressId, coupon)).id
     } catch (e) {
       notify(errorMessage(e), 'error')
       setSubmitting(false)
+      return
+    }
+    queryClient.invalidateQueries({ queryKey: ['cart'] })
+    queryClient.invalidateQueries({ queryKey: ['orders'] })
+    try {
+      const { redirectUrl } = await orderApi.pay(orderId)
+      window.location.assign(redirectUrl)
+    } catch (e) {
+      // The order exists (and the cart is now empty), so continue from the order page where it can be paid.
+      notify(errorMessage(e), 'error')
+      navigate(`/account/orders/${orderId}`, { replace: true })
     }
   }
 
+  if (preview.isError || addresses.isError) {
+    return (
+      <EmptyState
+        emoji="⚠️"
+        title="دریافت اطلاعات سفارش ممکن نشد."
+        action={<Button variant="contained" onClick={() => { preview.refetch(); addresses.refetch() }}>تلاش دوباره</Button>}
+      />
+    )
+  }
   if (!summary || addresses.isLoading) return <PageLoader />
   if (summary.cart.items.length === 0) {
     return <EmptyState emoji="🛒" title="سبد خرید شما خالی است." action={<Button component={RouterLink} to="/products" variant="contained">مشاهده محصولات</Button>} />

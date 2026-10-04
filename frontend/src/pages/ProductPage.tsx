@@ -12,12 +12,13 @@ import {
   Grid,
   IconButton,
   Link,
+  Pagination,
   Paper,
   Rating,
   TextField,
   Typography,
 } from '@mui/material'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Link as RouterLink, useParams } from 'react-router-dom'
 import { errorMessage } from '../api/client'
@@ -64,7 +65,12 @@ function Reviews({ productId }: { productId: number }) {
   const { user } = useAuth()
   const notify = useNotify()
   const queryClient = useQueryClient()
-  const reviews = useQuery({ queryKey: ['reviews', productId], queryFn: () => catalogApi.reviews(productId) })
+  const [page, setPage] = useState(0)
+  const reviews = useQuery({
+    queryKey: ['reviews', productId, page],
+    queryFn: () => catalogApi.reviews(productId, page),
+    placeholderData: keepPreviousData,
+  })
   const eligibility = useQuery({
     queryKey: ['reviews', productId, 'eligibility'],
     queryFn: () => catalogApi.reviewEligibility(productId),
@@ -123,6 +129,11 @@ function Reviews({ productId }: { productId: number }) {
           {r.comment && <Typography sx={{ mt: 1 }}>{r.comment}</Typography>}
         </Box>
       ))}
+      {(reviews.data?.totalPages ?? 0) > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+          <Pagination count={reviews.data!.totalPages} page={page + 1} onChange={(_, p) => setPage(p - 1)} />
+        </Box>
+      )}
     </Box>
   )
 }
@@ -152,7 +163,8 @@ export default function ProductPage() {
       </Breadcrumbs>
       <Grid container spacing={4}>
         <Grid size={{ xs: 12, md: 5 }}>
-          <Gallery product={p} />
+          {/* Keyed by product so the selected photo resets when moving to another product. */}
+          <Gallery key={p.id} product={p} />
         </Grid>
         <Grid size={{ xs: 12, md: 7 }}>
           <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
@@ -203,7 +215,7 @@ export default function ProductPage() {
           )}
         </Grid>
       </Grid>
-      <Reviews productId={p.id} />
+      <Reviews key={p.id} productId={p.id} />
     </>
   )
 }

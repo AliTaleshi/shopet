@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { errorMessage } from '../api/client'
 import { wishlistApi } from '../api/endpoints'
 import { useAuth } from './AuthContext'
@@ -9,6 +9,7 @@ export function useWishlist() {
   const { user, loading } = useAuth()
   const notify = useNotify()
   const navigate = useNavigate()
+  const location = useLocation()
   const queryClient = useQueryClient()
   const ids = useQuery({ queryKey: ['wishlist', 'ids'], queryFn: wishlistApi.ids, enabled: !!user })
 
@@ -30,7 +31,7 @@ export function useWishlist() {
     toggle: (productId: number) => {
       if (loading) return // Stored session is still being checked.
       if (!user) {
-        navigate('/login', { state: { from: window.location.pathname } })
+        navigate('/login', { state: { from: location.pathname + location.search } })
         return
       }
       toggle.mutate(productId)

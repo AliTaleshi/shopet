@@ -109,7 +109,7 @@ export default function LoginPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               autoFocus
-              slotProps={{ htmlInput: { inputMode: 'tel', dir: 'ltr', maxLength: 13 } }}
+              slotProps={{ htmlInput: { inputMode: 'tel', dir: 'ltr', maxLength: 16 } }}
             />
             <Button type="submit" variant="contained" size="large" disabled={busy}>
               دریافت کد تأیید

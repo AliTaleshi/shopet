@@ -1,5 +1,7 @@
 import { Alert, Box, Button, Divider, Grid, Link, Paper, Typography } from '@mui/material'
 import { useQueries } from '@tanstack/react-query'
+import { isAxiosError } from 'axios'
+import { useEffect } from 'react'
 import { Link as RouterLink, useNavigate } from 'react-router-dom'
 import { catalogApi } from '../api/endpoints'
 import type { CartLine } from '../api/types'
@@ -23,6 +25,17 @@ function useGuestLines(enabled: boolean) {
     })),
   })
   const loading = results.some((r) => r.isLoading)
+
+  // Products that were removed or hidden since they were added: drop them so the badge count matches the page.
+  const missing = cart.guestItems
+    .filter((_, i) => isAxiosError(results[i]?.error) && results[i].error?.response?.status === 404)
+    .map((item) => item.productId)
+  const missingKey = missing.join(',')
+  useEffect(() => {
+    missingKey.split(',').filter(Boolean).forEach((id) => cart.setQuantity(Number(id), 0, 0))
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once per set of missing products
+  }, [missingKey])
+
   const lines: CartLine[] = []
   cart.guestItems.forEach((item, i) => {
     const p = results[i]?.data
@@ -50,6 +63,15 @@ export default function CartPage() {
   const guest = useGuestLines(!cart.isServerCart)
 
   const lines = cart.isServerCart ? (cart.serverCart?.items ?? []) : guest.lines
+  if (cart.isServerCart && cart.serverCartError) {
+    return (
+      <EmptyState
+        emoji="⚠️"
+        title="دریافت سبد خرید ممکن نشد."
+        action={<Button variant="contained" onClick={cart.reloadServerCart}>تلاش دوباره</Button>}
+      />
+    )
+  }
   const loading = cart.isServerCart ? !cart.serverCart : guest.loading
   if (loading) return <PageLoader />
   if (lines.length === 0) {

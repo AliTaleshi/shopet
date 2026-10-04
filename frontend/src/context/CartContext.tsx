@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { errorMessage } from '../api/client'
 import { cartApi } from '../api/endpoints'
 import type { Cart } from '../api/types'
 import {
   clearGuestCart,
+  GUEST_CART_KEY,
   guestCartCount,
   readGuestCart,
   setGuestQuantity,
@@ -18,6 +19,9 @@ interface CartState {
   /** True when the cart lives on the server (user logged in). */
   isServerCart: boolean
   serverCart: Cart | undefined
+  /** The logged-in user's cart could not be loaded. */
+  serverCartError: boolean
+  reloadServerCart: () => void
   guestItems: GuestCartItem[]
   count: number
   quantityOf: (productId: number) => number
@@ -35,6 +39,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [guestItems, setGuestItems] = useState<GuestCartItem[]>(readGuestCart)
 
   const cartQuery = useQuery({ queryKey: ['cart'], queryFn: cartApi.get, enabled: !!user })
+  const { data: serverCart, isError: serverCartError, isPending: serverCartPending, refetch } = cartQuery
+
+  // Another tab changed the browser cart.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === GUEST_CART_KEY) setGuestItems(readGuestCart())
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   /** Moves the visitor's browser cart into their account; called right after login. */
   const mergeGuestCart = useCallback(async () => {
@@ -57,10 +71,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const quantityOf = useCallback(
     (productId: number) => {
-      const items = user ? cartQuery.data?.items : guestItems
+      const items = user ? serverCart?.items : guestItems
       return items?.find((i) => i.productId === productId)?.quantity ?? 0
     },
-    [user, cartQuery.data, guestItems],
+    [user, serverCart, guestItems],
   )
 
   const setQuantity = useCallback(
@@ -85,16 +99,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const value = useMemo<CartState>(
     () => ({
       isServerCart: !!user,
-      serverCart: cartQuery.data,
+      serverCart,
+      serverCartError,
+      reloadServerCart: () => void refetch(),
       guestItems,
-      count: user ? (cartQuery.data?.count ?? 0) : guestCartCount(guestItems),
+      count: user ? (serverCart?.count ?? 0) : guestCartCount(guestItems),
       quantityOf,
       setQuantity,
       mergeGuestCart,
-      // Until the stored session is validated we don't know which cart to write to.
-      busy: mutation.isPending || authLoading,
+      // Until the session is validated we don't know which cart to write to, and until the server cart has loaded
+      // a click on "add" would overwrite the quantity already in it (the API sets absolute quantities).
+      busy: mutation.isPending || authLoading || (!!user && serverCartPending),
     }),
-    [user, cartQuery.data, guestItems, quantityOf, setQuantity, mergeGuestCart, mutation.isPending, authLoading],
+    [user, serverCart, serverCartError, serverCartPending, refetch, guestItems, quantityOf, setQuantity, mergeGuestCart,
+      mutation.isPending, authLoading],
   )
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>
 }

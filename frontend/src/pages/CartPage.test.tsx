@@ -1,4 +1,5 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
+import { AxiosError } from 'axios'
 import { describe, expect, it, vi } from 'vitest'
 import { renderWithProviders } from '../test/render'
 import CartPage from './CartPage'
@@ -14,7 +15,11 @@ vi.mock('../api/endpoints', async (importOriginal) => {
     ...original,
     catalogApi: {
       ...original.catalogApi,
-      product: vi.fn((id: number) => Promise.resolve(id === 1 ? product(1, 200000, 150000, 10) : product(2, 50000, 50000, 1))),
+      product: vi.fn((id: number) =>
+        id === 99
+          ? Promise.reject(new AxiosError('gone', 'ERR', undefined, null, { status: 404, data: {} } as never))
+          : Promise.resolve(id === 1 ? product(1, 200000, 150000, 10) : product(2, 50000, 50000, 1)),
+      ),
     },
   }
 })
@@ -23,6 +28,14 @@ describe('CartPage (guest)', () => {
   it('shows an empty state', () => {
     renderWithProviders(<CartPage />)
     expect(screen.getByText('سبد خرید شما خالی است.')).toBeInTheDocument()
+  })
+
+  it('drops products that no longer exist from the browser cart', async () => {
+    localStorage.setItem('shopet.guestCart', JSON.stringify([{ productId: 1, quantity: 1 }, { productId: 99, quantity: 2 }]))
+    renderWithProviders(<CartPage />)
+
+    expect(await screen.findAllByTestId('cart-line')).toHaveLength(1)
+    await waitFor(() => expect(JSON.parse(localStorage.getItem('shopet.guestCart')!)).toEqual([{ productId: 1, quantity: 1 }]))
   })
 
   it('renders browser cart lines with totals, savings and stock warnings', async () => {

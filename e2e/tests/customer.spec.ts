@@ -111,6 +111,7 @@ test('failed payment can be retried later, or the order cancelled to release sto
 
   await page.getByRole('link', { name: 'پرداخت مجدد' }).click()
   await expect(page.getByText('این سفارش هنوز پرداخت نشده است.', { exact: false })).toBeVisible()
+  page.once('dialog', (d) => d.accept())
   await page.getByRole('button', { name: 'لغو سفارش' }).click()
   await expect(page.getByText('لغو‌شده').first()).toBeVisible()
 
