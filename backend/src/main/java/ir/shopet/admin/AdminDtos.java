@@ -29,8 +29,8 @@ public final class AdminDtos {
             @Size(max = 100, message = "نام برند طولانی است") String brand,
             @NotNull(message = "نوع حیوان الزامی است") PetType petType,
             @NotNull(message = "دسته‌بندی الزامی است") Long categoryId,
-            @PositiveOrZero(message = "قیمت نامعتبر است") long price,
-            @PositiveOrZero(message = "قیمت با تخفیف نامعتبر است") Long discountPrice,
+            @Positive(message = "قیمت باید بیشتر از صفر باشد") long price,
+            @Positive(message = "قیمت با تخفیف باید بیشتر از صفر باشد") Long discountPrice,
             @PositiveOrZero(message = "موجودی نامعتبر است") int stock,
             boolean active) {
     }

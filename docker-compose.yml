@@ -26,14 +26,17 @@ services:
       DB_URL: jdbc:postgresql://db:5432/${POSTGRES_DB:-shopet}
       DB_USER: ${POSTGRES_USER:-shopet}
       DB_PASSWORD: ${POSTGRES_PASSWORD:-shopet_secret}
-      JWT_SECRET: ${JWT_SECRET:-change-me-to-a-long-random-secret-of-at-least-32-chars}
+      # Empty means a random key per start (users log in again after restarts); set it in .env for production.
+      JWT_SECRET: ${JWT_SECRET:-}
       ADMIN_PHONE: ${ADMIN_PHONE:-09120000000}
+      # Demo mode: the login page shows the code. Turn off once a real SMS provider is configured.
       OTP_EXPOSE_CODE: ${OTP_EXPOSE_CODE:-true}
       SEED_DEMO_DATA: ${SEED_DEMO_DATA:-true}
     volumes:
       - uploads:/app/uploads
     ports:
-      - "${API_PORT:-8089}:8080"
+      # Direct API access for development, reachable from this machine only; browsers go through the frontend.
+      - "127.0.0.1:${API_PORT:-8089}:8080"
 
   frontend:
     build: ./frontend

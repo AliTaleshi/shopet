@@ -63,6 +63,15 @@ class CatalogIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void searchTreatsLikeWildcardsLiterally() throws Exception {
+        String tag = "wild" + System.nanoTime();
+        newProduct(tag + " A_B", 100_000, null, 1, PetType.DOG);
+        newProduct(tag + " AXB", 100_000, null, 1, PetType.DOG);
+        getJson(url(tag + " A_B", ""), null).andExpect(jsonPath("$.totalElements").value(1));
+        getJson(url(tag + " 100%", ""), null).andExpect(jsonPath("$.totalElements").value(0));
+    }
+
+    @Test
     void inactiveProductsAreHiddenFromTheShop() throws Exception {
         Product p = newProduct("محصول غیرفعال " + System.nanoTime(), 100_000, null, 3, PetType.BIRD);
         p.setActive(false);

@@ -14,7 +14,7 @@ import ir.shopet.config.AppProperties;
 class PricingServiceTest {
 
     private final PricingService pricing = new PricingService(new AppProperties(null, null, false, null, null, null,
-            new AppProperties.Shipping(50_000, 1_000_000), new AppProperties.OrderSettings(Duration.ZERO, Duration.ZERO),
+            new AppProperties.Shipping(50_000, 1_000_000), new AppProperties.OrderSettings(Duration.ZERO, Duration.ZERO, Duration.ZERO),
             null));
     private final Instant now = Instant.parse("2026-01-01T00:00:00Z");
 
@@ -65,6 +65,12 @@ class PricingServiceTest {
         assertThat(pricing.totals(999_999, 0)).isEqualTo(new PricingService.Totals(999_999, 0, 50_000, 1_049_999));
         assertThat(pricing.totals(1_200_000, 300_000).shipping()).isEqualTo(50_000);
         assertThat(pricing.totals(1_000_000, 0).shipping()).isZero();
-        assertThat(pricing.shipping(0)).isZero();
+        assertThat(pricing.totals(0, 0).shipping()).isZero();
+    }
+
+    @Test
+    void fullDiscountStillPaysShipping() {
+        // A coupon covering every item must not also waive shipping (the discounted amount is below the threshold).
+        assertThat(pricing.totals(100_000, 100_000)).isEqualTo(new PricingService.Totals(100_000, 100_000, 50_000, 50_000));
     }
 }

@@ -10,6 +10,8 @@ import ir.shopet.common.ApiException;
 @Service
 public class AccountService {
 
+    public static final int MAX_ADDRESSES = 20;
+
     private final UserRepository users;
     private final AddressRepository addresses;
 
@@ -37,6 +39,9 @@ public class AccountService {
 
     @Transactional
     public AddressDto addAddress(Long userId, AddressDto request) {
+        if (addresses.countByUserId(userId) >= MAX_ADDRESSES) {
+            throw ApiException.badRequest("حداکثر " + MAX_ADDRESSES + " آدرس می‌توانید ذخیره کنید.");
+        }
         Address address = new Address();
         address.setUserId(userId);
         request.applyTo(address);

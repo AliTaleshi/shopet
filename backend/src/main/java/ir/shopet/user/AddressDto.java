@@ -1,5 +1,6 @@
 package ir.shopet.user;
 
+import ir.shopet.common.Texts;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -13,6 +14,12 @@ public record AddressDto(
         @NotBlank(message = "شهر الزامی است") @Size(max = 50) String city,
         @NotBlank(message = "کد پستی الزامی است") @Pattern(regexp = "^\\d{10}$", message = "کد پستی باید ۱۰ رقم باشد") String postalCode,
         @NotBlank(message = "نشانی الزامی است") @Size(max = 500, message = "نشانی طولانی است") String addressLine) {
+
+    /** Accept Persian/Arabic digits from API clients too (the web UI already converts them). */
+    public AddressDto {
+        receiverPhone = Texts.toLatinDigits(receiverPhone == null ? null : receiverPhone.trim());
+        postalCode = Texts.toLatinDigits(postalCode == null ? null : postalCode.trim());
+    }
 
     public static AddressDto of(Address a) {
         return new AddressDto(a.getId(), a.getTitle(), a.getReceiverName(), a.getReceiverPhone(), a.getProvince(),

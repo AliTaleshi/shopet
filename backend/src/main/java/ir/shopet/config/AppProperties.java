@@ -25,7 +25,7 @@ public record AppProperties(
     public record Shipping(long cost, long freeThreshold) {
     }
 
-    public record OrderSettings(Duration unpaidTimeout, Duration expiryCheckInterval) {
+    public record OrderSettings(Duration unpaidTimeout, Duration expiryCheckInterval, Duration paymentGrace) {
     }
 
     public record Payment(String gateway) {

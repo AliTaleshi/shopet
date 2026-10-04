@@ -16,6 +16,8 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import ir.shopet.catalog.Category;
 import ir.shopet.catalog.CategoryRepository;
@@ -93,12 +95,26 @@ public class DataSeeder implements ApplicationRunner {
             product.getImages().add(image);
             attached++;
         }
-        try {
-            Files.writeString(marker, Instant.now().toString());
-        } catch (IOException e) {
-            log.warn("Could not write {}", marker, e);
+        int total = attached;
+        Runnable writeMarker = () -> {
+            try {
+                Files.writeString(marker, Instant.now().toString());
+            } catch (IOException e) {
+                log.warn("Could not write {}", marker, e);
+            }
+            log.info("Attached {} demo product images", total);
+        };
+        // Only mark the work done once the image rows are really saved.
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    writeMarker.run();
+                }
+            });
+        } else {
+            writeMarker.run();
         }
-        log.info("Attached {} demo product images", attached);
     }
 
     private static byte[] readSeedImage(String name) {

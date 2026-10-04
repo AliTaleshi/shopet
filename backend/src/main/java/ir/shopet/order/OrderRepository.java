@@ -28,8 +28,21 @@ public interface OrderRepository extends JpaRepository<PurchaseOrder, Long> {
     @Query("select o from PurchaseOrder o where o.id = :id")
     Optional<PurchaseOrder> findByIdForUpdate(@Param("id") Long id);
 
-    @Query("select o.id from PurchaseOrder o where o.status = :status and o.createdAt < :before")
-    List<Long> findIdsByStatusCreatedBefore(@Param("status") OrderStatus status, @Param("before") Instant before);
+    /** Pending orders older than {@code before} with no payment started since {@code paymentSince}. */
+    @Query("""
+            select o.id from PurchaseOrder o
+            where o.status = ir.shopet.order.OrderStatus.PENDING_PAYMENT and o.createdAt < :before
+              and not exists (select p.id from Payment p where p.orderId = o.id
+                              and p.status = ir.shopet.payment.PaymentStatus.INITIATED and p.createdAt > :paymentSince)
+            """)
+    List<Long> findExpirableIds(@Param("before") Instant before, @Param("paymentSince") Instant paymentSince);
+
+    @Query("""
+            select count(p) > 0 from Payment p
+            where p.orderId = :orderId and p.status = ir.shopet.payment.PaymentStatus.INITIATED
+              and p.createdAt > :since
+            """)
+    boolean hasPaymentStartedSince(@Param("orderId") Long orderId, @Param("since") Instant since);
 
     long countByStatus(OrderStatus status);
 

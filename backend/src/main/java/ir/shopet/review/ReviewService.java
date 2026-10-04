@@ -47,9 +47,10 @@ public class ReviewService {
         return new Eligibility(purchased && !already, already, purchased);
     }
 
+    /** The product row is locked so concurrent reviews can't overwrite each other's rating aggregate. */
     @Transactional
     public ReviewDto create(Long userId, Long productId, int rating, String comment) {
-        Product product = products.findById(productId)
+        Product product = products.findByIdForUpdate(productId)
                 .filter(Product::isActive)
                 .orElseThrow(() -> ApiException.notFound("محصول پیدا نشد."));
         if (!orders.hasPurchased(userId, productId, OrderStatus.PAID_STATUSES)) {
@@ -77,9 +78,12 @@ public class ReviewService {
     @Transactional
     public void delete(Long reviewId) {
         Review review = reviews.findById(reviewId).orElseThrow(() -> ApiException.notFound("نظر پیدا نشد."));
+        Product product = products.findByIdForUpdate(review.getProductId()).orElse(null);
         reviews.delete(review);
         reviews.flush();
-        products.findById(review.getProductId()).ifPresent(this::refreshRating);
+        if (product != null) {
+            refreshRating(product);
+        }
     }
 
     private void refreshRating(Product product) {

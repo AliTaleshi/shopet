@@ -72,7 +72,7 @@ coupons(id, code UNIQUE, type[PERCENT|FIXED], value, min_order_amount, max_disco
         usage_limit NULL, used_count, expires_at NULL, active, created_at)
 
 orders(id, user_id, status, items_total, discount_amount, shipping_cost, total,
-       coupon_code NULL, receiver_name, receiver_phone, province, city, postal_code,
+       coupon_id NULL→coupons, coupon_code NULL, receiver_name, receiver_phone, province, city, postal_code,
        address_line, created_at, updated_at, paid_at NULL)
 order_items(id, order_id, product_id, product_name, unit_price, quantity)
 payments(id, order_id, gateway, amount, authority UNIQUE, status[INITIATED|SUCCESS|FAILED],
@@ -93,8 +93,14 @@ PAID / PROCESSING ──admin──► CANCELLED (stock restored)
 ```
 
 Stock is **reserved** (decremented) when the order is created, under a
-pessimistic row lock to prevent overselling. Coupon usage is counted when the
-order is paid.
+pessimistic row lock to prevent overselling. A coupon use is reserved at the same
+time (under a row lock on the coupon, so usage limits hold under concurrency) and
+given back if the order is cancelled. Checkout also locks the user row, so a
+double-submitted order can't reserve stock twice.
+
+Unpaid orders are cancelled after 30 minutes, except while a payment started in
+the last 15 minutes is still open (the customer may be on the bank page).
+Concurrent gateway callbacks are serialized by locking the payment row.
 
 ### Pricing rules
 
@@ -102,7 +108,8 @@ order is paid.
 - Coupon: `PERCENT` (capped by `max_discount`) or `FIXED`; requires
   `items_total >= min_order_amount`, active, not expired, usage limit not reached.
 - Shipping: 50,000 Toman; free when items total (after discount) ≥ 1,000,000 Toman
-  (both configurable).
+  (both configurable). A coupon that covers every item doesn't waive shipping; an
+  order whose total is still 0 is marked paid without going to the gateway.
 
 ## 4. Authentication
 
@@ -113,6 +120,12 @@ order is paid.
    user on first login; returns a signed JWT (HS256, 7 days) + user profile +
    `newUser` flag (UI then asks for the full name).
 3. Roles: `CUSTOMER`, `ADMIN`. The phone in `ADMIN_PHONE` is promoted to admin at startup.
+4. Requests and verifications for one number are serialized with a PostgreSQL
+   advisory lock, so parallel guesses can't exceed the attempt limit. Old codes are
+   deleted hourly, and nginx limits `/api/auth/` to 60 requests/minute per IP.
+5. Tokens are signed with `JWT_SECRET`; if it is unset (or the `.env.example`
+   placeholder) a random key is generated at startup instead of a guessable default.
+   The `iss` claim is validated.
 
 ## 5. REST API (prefix `/api`)
 

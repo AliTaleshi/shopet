@@ -49,6 +49,11 @@ public class PaymentService {
         if (order.getStatus() != OrderStatus.PENDING_PAYMENT) {
             throw ApiException.badRequest("این سفارش در انتظار پرداخت نیست.");
         }
+        if (order.getTotal() == 0) {
+            // Fully covered by a discount: nothing to charge, and gateways reject zero amounts.
+            orderService.markPaid(order);
+            return resultUrl(new CallbackResult(order.getId(), true));
+        }
         PaymentGateway.InitResult init = gateway.initiate(order.getId(), order.getTotal(),
                 props.baseUrl() + "/api/payments/callback");
         Payment payment = new Payment();
@@ -63,7 +68,7 @@ public class PaymentService {
     @Transactional
     public CallbackResult handleCallback(Map<String, String> params) {
         String authority = gateway.extractAuthority(params);
-        Payment payment = authority == null ? null : payments.findByAuthority(authority).orElse(null);
+        Payment payment = authority == null ? null : payments.findByAuthorityForUpdate(authority).orElse(null);
         if (payment == null) {
             return new CallbackResult(null, false);
         }

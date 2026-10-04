@@ -29,7 +29,7 @@ public class OrderExpiryJob {
     public void run() {
         Instant before = Instant.now().minus(props.order().unpaidTimeout());
         int cancelled = 0;
-        for (Long id : orders.findIdsByStatusCreatedBefore(OrderStatus.PENDING_PAYMENT, before)) {
+        for (Long id : orders.findExpirableIds(before, orderService.paymentGraceStart())) {
             try {
                 if (orderService.expireIfUnpaid(id, before)) {
                     cancelled++;

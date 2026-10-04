@@ -74,8 +74,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleExceptionInternal(Exception ex, @Nullable Object body, HttpHeaders headers,
             HttpStatusCode statusCode, WebRequest request) {
-        if (body == null && statusCode.is4xxClientError()) {
-            body = ProblemDetail.forStatusAndDetail(statusCode, "درخواست نامعتبر است.");
+        // Spring's own 4xx responses (malformed JSON, wrong method, ...) carry English details; show Persian instead.
+        if (statusCode.is4xxClientError()) {
+            String detail = switch (statusCode.value()) {
+                case 404 -> "مسیر درخواستی پیدا نشد.";
+                case 405 -> "این روش درخواست پشتیبانی نمی‌شود.";
+                case 406, 415 -> "قالب درخواست یا پاسخ پشتیبانی نمی‌شود.";
+                default -> "درخواست نامعتبر است.";
+            };
+            if (body instanceof ProblemDetail problem) {
+                problem.setDetail(detail);
+            } else if (body == null) {
+                body = ProblemDetail.forStatusAndDetail(statusCode, detail);
+            }
         }
         return super.handleExceptionInternal(ex, body, headers, statusCode, request);
     }

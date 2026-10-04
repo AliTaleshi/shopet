@@ -43,6 +43,7 @@ public class PurchaseOrder {
     private long shippingCost;
     private long total;
     private String couponCode;
+    private Long couponId;
 
     @Column(nullable = false)
     private String receiverName;

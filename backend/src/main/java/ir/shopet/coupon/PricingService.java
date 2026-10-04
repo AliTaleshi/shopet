@@ -45,8 +45,9 @@ public class PricingService {
         return Math.min(discount, itemsTotal);
     }
 
-    public long shipping(long amountAfterDiscount) {
-        if (amountAfterDiscount <= 0) {
+    /** Shipping is free once the discounted amount reaches the threshold; an empty cart has no shipping. */
+    public long shipping(long itemsTotal, long amountAfterDiscount) {
+        if (itemsTotal <= 0) {
             return 0;
         }
         return amountAfterDiscount >= shipping.freeThreshold() ? 0 : shipping.cost();
@@ -54,7 +55,7 @@ public class PricingService {
 
     public Totals totals(long itemsTotal, long discount) {
         long afterDiscount = itemsTotal - discount;
-        long shippingCost = shipping(afterDiscount);
+        long shippingCost = shipping(itemsTotal, afterDiscount);
         return new Totals(itemsTotal, discount, shippingCost, afterDiscount + shippingCost);
     }
 }

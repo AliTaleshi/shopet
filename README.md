@@ -48,11 +48,14 @@ the verification code is shown on the login page; it is also written to the back
 | Variable | Default | Purpose |
 |---|---|---|
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | `shopet` / `shopet` / `shopet_secret` | Database |
-| `JWT_SECRET` | dev value | Token signing key, **at least 32 characters; change in production** |
+| `JWT_SECRET` | empty | Token signing key (at least 32 characters). Empty = random key per start, so users log in again after restarts. **Set it in production.** |
 | `ADMIN_PHONE` | `09120000000` | Mobile number promoted to admin at startup |
-| `OTP_EXPOSE_CODE` | `true` | Return the OTP in the API response (turn off once a real SMS provider is wired) |
+| `OTP_EXPOSE_CODE` | `true` in compose, `false` otherwise | Demo mode: return the OTP in the API response. **Anyone can then log in as any number, including the admin** — turn it off for real users |
 | `SEED_DEMO_DATA` | `true` | Insert demo categories, products and coupons into an empty database |
-| `WEB_PORT` / `API_PORT` | `8088` / `8089` | Published ports |
+| `WEB_PORT` / `API_PORT` | `8088` / `8089` | Published ports (the API port only on 127.0.0.1) |
+
+The backend logs a warning at startup for every demo-only setting that is active (exposed OTP codes, no SMS
+provider, mock payment gateway).
 
 ## Development
 

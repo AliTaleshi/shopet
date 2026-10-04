@@ -27,10 +27,10 @@ public record ProductFilter(
                 predicates.add(cb.isTrue(root.get("active")));
             }
             if (q != null && !q.isBlank()) {
-                String pattern = "%" + Texts.normalizePersian(q).toLowerCase() + "%";
+                String pattern = "%" + escapeLike(Texts.normalizePersian(q).toLowerCase()) + "%";
                 predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("name")), pattern),
-                        cb.like(cb.lower(root.get("brand")), pattern)));
+                        cb.like(cb.lower(root.get("name")), pattern, '\\'),
+                        cb.like(cb.lower(root.get("brand")), pattern, '\\')));
             }
             if (categoryId != null) {
                 predicates.add(cb.equal(root.get("category").get("id"), categoryId));
@@ -52,6 +52,11 @@ public record ProductFilter(
             }
             return cb.and(predicates.toArray(Predicate[]::new));
         };
+    }
+
+    /** Makes %, _ and backslash in the search text match literally instead of acting as LIKE wildcards. */
+    static String escapeLike(String text) {
+        return text.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_");
     }
 
     public Sort toSort() {

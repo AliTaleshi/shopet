@@ -19,6 +19,10 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("select p from Product p where p.id in :ids order by p.id")
     List<Product> findAllForUpdate(@Param("ids") Collection<Long> ids);
 
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Product p where p.id = :id")
+    Optional<Product> findByIdForUpdate(@Param("id") Long id);
+
     boolean existsByCategoryId(Long categoryId);
 
     Optional<Product> findFirstByNameOrderByIdAsc(String name);

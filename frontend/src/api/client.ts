@@ -1,4 +1,4 @@
-import axios, { AxiosError } from 'axios'
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 
 export const TOKEN_KEY = 'shopet.token'
 
@@ -23,8 +23,16 @@ export function setUnauthorizedListener(listener: UnauthorizedListener | null) {
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
+    const config = error.config as (InternalAxiosRequestConfig & { _retriedWithoutToken?: boolean }) | undefined
     if (error.response?.status === 401 && localStorage.getItem(TOKEN_KEY)) {
       onUnauthorized?.()
+      // An expired token is rejected even on public endpoints (catalog, product pages), so retry those
+      // once without it; requests that really need a login still fail and the guards redirect to /login.
+      if (config && !config._retriedWithoutToken) {
+        config._retriedWithoutToken = true
+        config.headers.delete('Authorization')
+        return api.request(config)
+      }
     }
     return Promise.reject(error)
   },

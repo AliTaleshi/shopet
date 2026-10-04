@@ -17,11 +17,13 @@ import ir.shopet.catalog.Product;
 import ir.shopet.catalog.ProductRepository;
 import ir.shopet.common.ApiException;
 import ir.shopet.common.PageResponse;
+import ir.shopet.config.AppProperties;
 import ir.shopet.coupon.Coupon;
 import ir.shopet.coupon.CouponService;
 import ir.shopet.coupon.PricingService;
 import ir.shopet.user.AccountService;
 import ir.shopet.user.Address;
+import ir.shopet.user.UserRepository;
 
 @Service
 public class OrderService {
@@ -32,15 +34,20 @@ public class OrderService {
     private final CouponService couponService;
     private final PricingService pricing;
     private final AccountService accountService;
+    private final UserRepository users;
+    private final AppProperties props;
 
     public OrderService(OrderRepository orders, CartItemRepository cartItems, ProductRepository products,
-            CouponService couponService, PricingService pricing, AccountService accountService) {
+            CouponService couponService, PricingService pricing, AccountService accountService, UserRepository users,
+            AppProperties props) {
         this.orders = orders;
         this.cartItems = cartItems;
         this.products = products;
         this.couponService = couponService;
         this.pricing = pricing;
         this.accountService = accountService;
+        this.users = users;
+        this.props = props;
     }
 
     @Transactional(readOnly = true)
@@ -59,9 +66,10 @@ public class OrderService {
                 discount > 0 ? code : null);
     }
 
-    /** Creates an order from the user's cart, reserving stock under row locks. */
+    /** Creates an order from the user's cart, reserving stock and the coupon under row locks. */
     @Transactional
     public OrderDto create(Long userId, Long addressId, String couponCode) {
+        users.findByIdForUpdate(userId).orElseThrow(() -> ApiException.notFound("کاربر پیدا نشد."));
         Address address = accountService.getAddress(userId, addressId);
         List<CartItem> items = cartItems.findByUserIdOrderByIdAsc(userId);
         if (items.isEmpty()) {
@@ -91,8 +99,10 @@ public class OrderService {
         long discount = 0;
         String code = blankToNull(couponCode);
         if (code != null) {
-            Coupon coupon = couponService.require(code);
+            Coupon coupon = couponService.requireForUpdate(code);
             discount = pricing.discount(coupon, itemsTotal, Instant.now());
+            couponService.reserve(coupon);
+            order.setCouponId(coupon.getId());
             order.setCouponCode(coupon.getCode());
         }
         PricingService.Totals totals = pricing.totals(itemsTotal, discount);
@@ -152,11 +162,15 @@ public class OrderService {
         return OrderDto.of(order);
     }
 
-    /** Cancels an unpaid order whose payment window has elapsed. Returns true if it was cancelled. */
+    /**
+     * Cancels an unpaid order whose payment window has elapsed, unless the customer started a payment recently (they
+     * may still be on the bank page). Returns true if it was cancelled.
+     */
     @Transactional
     public boolean expireIfUnpaid(Long orderId, Instant createdBefore) {
         PurchaseOrder order = lockOrder(orderId);
-        if (order.getStatus() != OrderStatus.PENDING_PAYMENT || !order.getCreatedAt().isBefore(createdBefore)) {
+        if (order.getStatus() != OrderStatus.PENDING_PAYMENT || !order.getCreatedAt().isBefore(createdBefore)
+                || orders.hasPaymentStartedSince(orderId, paymentGraceStart())) {
             return false;
         }
         cancel(order);
@@ -174,9 +188,11 @@ public class OrderService {
                 product.setSoldCount(product.getSoldCount() + item.getQuantity());
             }
         }
-        if (order.getCouponCode() != null) {
-            couponService.incrementUsage(order.getCouponCode());
-        }
+    }
+
+    /** Payments started after this instant keep an unpaid order alive. */
+    public Instant paymentGraceStart() {
+        return Instant.now().minus(props.order().paymentGrace());
     }
 
     public PurchaseOrder lockOrder(Long orderId) {
@@ -197,6 +213,9 @@ public class OrderService {
             }
         }
         order.setStatus(OrderStatus.CANCELLED);
+        if (order.getCouponId() != null) {
+            couponService.release(order.getCouponId());
+        }
     }
 
     private Map<Long, Product> lockProducts(PurchaseOrder order) {

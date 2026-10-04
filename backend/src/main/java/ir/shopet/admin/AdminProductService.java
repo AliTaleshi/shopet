@@ -54,10 +54,8 @@ public class AdminProductService {
         if (orders.isProductOrdered(id)) {
             throw ApiException.conflict("این محصول در سفارش‌ها ثبت شده و قابل حذف نیست؛ به‌جای آن غیرفعالش کنید.");
         }
-        List<String> files = product.getImages().stream().map(ProductImage::getFileName).toList();
+        product.getImages().forEach(image -> storage.deleteAfterCommit(image.getFileName()));
         products.delete(product);
-        products.flush();
-        files.forEach(storage::delete);
     }
 
     @Transactional
@@ -90,7 +88,7 @@ public class AdminProductService {
                 .orElseThrow(() -> ApiException.notFound("تصویر پیدا نشد."));
         product.getImages().remove(image);
         products.flush();
-        storage.delete(image.getFileName());
+        storage.deleteAfterCommit(image.getFileName());
         return ProductDetail.of(product);
     }
 

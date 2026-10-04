@@ -6,6 +6,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -87,6 +89,35 @@ class AdminIntegrationTest extends IntegrationTest {
 
         deleteJson("/api/admin/products/" + id, admin).andExpect(status().isNoContent());
         assertThat(products.findById(id)).isEmpty();
+    }
+
+    @Test
+    void failedMultiUploadLeavesNoOrphanFiles() throws Exception {
+        Product product = newProduct("آپلود ناموفق", 100_000, null, 1, PetType.CAT);
+        Path uploads = Path.of("target/test-uploads");
+        long before;
+        try (var files = Files.list(uploads)) {
+            before = files.count();
+        }
+        mvc.perform(multipart("/api/admin/products/" + product.getId() + "/images")
+                        .file(new MockMultipartFile("files", "ok.png", "image/png", PNG))
+                        .file(new MockMultipartFile("files", "bad.png", "image/png", "not an image".getBytes()))
+                        .header("Authorization", "Bearer " + adminToken()))
+                .andExpect(status().isBadRequest());
+        try (var files = Files.list(uploads)) {
+            assertThat(files.count()).isEqualTo(before);
+        }
+        getJson("/api/admin/products/" + product.getId(), adminToken()).andExpect(jsonPath("$.images.length()").value(0));
+    }
+
+    @Test
+    void zeroPriceIsRejected() throws Exception {
+        Map<String, Object> body = productBody(newCategory());
+        body.put("price", 0);
+        body.put("discountPrice", null);
+        postJson("/api/admin/products", adminToken(), body)
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors.price").value("قیمت باید بیشتر از صفر باشد"));
     }
 
     @Test

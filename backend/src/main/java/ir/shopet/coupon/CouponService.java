@@ -23,8 +23,20 @@ public class CouponService {
                 .orElseThrow(() -> ApiException.badRequest("کد تخفیف معتبر نیست."));
     }
 
+    /** Loads the coupon with a row lock so its usage limit can be checked and reserved atomically. */
+    public Coupon requireForUpdate(String code) {
+        return coupons.findByCodeForUpdate(normalize(code))
+                .orElseThrow(() -> ApiException.badRequest("کد تخفیف معتبر نیست."));
+    }
+
+    /** Takes one use of the coupon; the caller must hold the row lock and have validated the limit. */
+    public void reserve(Coupon coupon) {
+        coupon.setUsedCount(coupon.getUsedCount() + 1);
+    }
+
+    /** Gives back the use reserved by a cancelled order. */
     @Transactional
-    public void incrementUsage(String code) {
-        coupons.findByCodeIgnoreCase(normalize(code)).ifPresent(c -> c.setUsedCount(c.getUsedCount() + 1));
+    public void release(Long couponId) {
+        coupons.releaseUsage(couponId);
     }
 }

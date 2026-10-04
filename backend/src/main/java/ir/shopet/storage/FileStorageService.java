@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.PathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import ir.shopet.common.ApiException;
@@ -49,7 +51,10 @@ public class FileStorageService {
         }
     }
 
-    /** Stores image bytes under a new random name; {@code extension} is one of jpg, png, webp, gif. */
+    /**
+     * Stores image bytes under a new random name; {@code extension} is one of jpg, png, webp, gif. Inside a
+     * transaction the file is removed again if the transaction rolls back, so failed uploads leave no orphans.
+     */
     public String store(byte[] data, String extension) {
         if (!looksLikeImage(data, extension)) {
             throw ApiException.badRequest("محتوای فایل تصویر معتبر نیست.");
@@ -60,7 +65,31 @@ public class FileStorageService {
         } catch (IOException e) {
             throw new IllegalStateException("Could not store file", e);
         }
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCompletion(int status) {
+                    if (status != STATUS_COMMITTED) {
+                        delete(name);
+                    }
+                }
+            });
+        }
         return name;
+    }
+
+    /** Deletes the file once the surrounding transaction commits (immediately when there is none). */
+    public void deleteAfterCommit(String name) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            delete(name);
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                delete(name);
+            }
+        });
     }
 
     public Optional<Resource> load(String name) {

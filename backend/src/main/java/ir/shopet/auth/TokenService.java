@@ -11,6 +11,7 @@ import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Service;
 
 import ir.shopet.config.AppProperties;
+import ir.shopet.config.SecurityConfig;
 import ir.shopet.user.User;
 
 @Service
@@ -27,7 +28,7 @@ public class TokenService {
     public String issue(User user) {
         Instant now = Instant.now();
         JwtClaimsSet claims = JwtClaimsSet.builder()
-                .issuer("shopet")
+                .issuer(SecurityConfig.ISSUER)
                 .issuedAt(now)
                 .expiresAt(now.plus(props.jwt().ttl()))
                 .subject(String.valueOf(user.getId()))

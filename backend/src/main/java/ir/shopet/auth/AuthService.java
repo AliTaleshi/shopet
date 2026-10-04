@@ -46,6 +46,7 @@ public class AuthService {
     @Transactional
     public OtpRequestResult requestOtp(String rawPhone) {
         String phone = requirePhone(rawPhone);
+        otpCodes.lockPhone(phone);
         AppProperties.Otp otp = props.otp();
         Instant now = Instant.now();
         otpCodes.findTopByPhoneOrderByCreatedAtDesc(phone).ifPresent(last -> {
@@ -73,6 +74,7 @@ public class AuthService {
     @Transactional(noRollbackFor = ApiException.class)
     public LoginResult verifyOtp(String rawPhone, String rawCode) {
         String phone = requirePhone(rawPhone);
+        otpCodes.lockPhone(phone);
         String code = Texts.toLatinDigits(rawCode == null ? "" : rawCode.trim());
         OtpCode otp = otpCodes.findTopByPhoneOrderByCreatedAtDesc(phone)
                 .filter(o -> !o.isConsumed())

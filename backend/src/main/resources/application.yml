@@ -41,10 +41,12 @@ app:
   seed-demo-data: ${SEED_DEMO_DATA:true}
   upload-dir: ${UPLOAD_DIR:./uploads}
   jwt:
-    secret: ${JWT_SECRET:dev-only-secret-change-me-please-0123456789abcdef}
+    # Empty: a random key is generated at startup (sessions end on restart). Set JWT_SECRET in production.
+    secret: ${JWT_SECRET:}
     ttl: 7d
   otp:
-    expose-code: ${OTP_EXPOSE_CODE:true}
+    # Demo only: returns the code in the API response. Never enable with a public deployment.
+    expose-code: ${OTP_EXPOSE_CODE:false}
     ttl: 2m
     resend-interval: 60s
     max-attempts: 5
@@ -54,5 +56,7 @@ app:
   order:
     unpaid-timeout: 30m
     expiry-check-interval: 60s
+    # Orders with a payment started this recently are not expired, so customers at the bank page aren't cut off.
+    payment-grace: 15m
   payment:
     gateway: mock
